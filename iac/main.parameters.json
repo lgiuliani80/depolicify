@@ -11,8 +11,8 @@
     "location": {
       "value": "Italy North"
     },
-    "scheduleStartTime": {
-      "value": "2025-08-09T07:00:00.000Z"
+    "timeZone": {
+      "value": "Europe/Rome"
     }
   }
 }

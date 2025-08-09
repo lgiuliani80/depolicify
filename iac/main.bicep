@@ -13,6 +13,12 @@ param tenantId string = tenant().tenantId
 @description('Start time for the schedule (UTC)')
 param scheduleStartTime string = dateTimeAdd(utcNow(), 'P1D')
 
+@description('Local time zone')
+param timeZone string = 'Europe/Rome'
+
+@description('Expiration for SAS token created to access .ps1 script in the storage account. Defaults to 1H')
+param expiry string = dateTimeAdd(utcNow(), 'PT1H')
+
 // Variables for resource naming
 var automationAccountName = 'aa-${appname}-${locationshort}'
 var storageAccountName = 'st${appname}${locationshort}${substring(uniqueString(resourceGroup().id), 0, 5)}'
@@ -23,7 +29,7 @@ var variableName = 'TenantId'
 var deploymentScriptName = 'upload-runbook-script'
 
 // PowerShell script content from depolicify.ps1
-var runbookContent = loadTextContent('../depolicify.ps1')
+var runbookContent = loadTextContent('../src/depolicify.ps1')
 
 // Storage Account for hosting the runbook script
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
@@ -52,49 +58,71 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   properties: {
     azCliVersion: '2.50.0'
     retentionInterval: 'PT1H'
+    timeout: 'PT10M'
     cleanupPreference: 'OnSuccess'
-    scriptContent: '''
-      # Create container
-      az storage container create --name runbooks --account-name $STORAGE_ACCOUNT_NAME --account-key $STORAGE_ACCOUNT_KEY
+    storageAccountSettings: {
+      storageAccountName: storageAccountName
+      storageAccountKey: storageAccount.listKeys().keys[0].value
+    }
+    #disable-next-line prefer-interpolation
+    scriptContent: concat('''
+# Runbook content
+cat << "EOF" > depolicify.ps1
+''', runbookContent, '''
+EOF
       
+      # Create container
+      echo "1. Creating container ..."
+      az storage container create --name runbooks --account-name $STORAGE_ACCOUNT_NAME --account-key $STORAGE_ACCOUNT_KEY
+      echo ""
+
       # Upload the PowerShell script content to blob
-      echo "$RUNBOOK_CONTENT" | az storage blob upload \
+      echo "2. Uploading PowerShell script ..."
+      az storage blob upload \
         --account-name $STORAGE_ACCOUNT_NAME \
         --account-key $STORAGE_ACCOUNT_KEY \
         --container-name runbooks \
         --name depolicify.ps1 \
-        --file /dev/stdin \
+        --file depolicify.ps1 \
         --overwrite
-      
-      # Generate SAS URL with read permission valid for 24 hours
+      echo ""
+
+      # Generate SAS URL with read permission valid for 1 hour
+      echo "3. Generating SAS for blob ..."
       SAS_URL=$(az storage blob generate-sas \
         --account-name $STORAGE_ACCOUNT_NAME \
-        --account-key $STORAGE_ACCOUNT_KEY \
+        --account-key "$STORAGE_ACCOUNT_KEY" \
         --container-name runbooks \
         --name depolicify.ps1 \
         --permissions r \
-        --expiry $(date -u -d '+24 hours' '+%Y-%m-%dT%H:%MZ') \
+        --expiry $EXPIRY \
         --https-only \
         --output tsv)
       
-      # Get the full HTTPS URL using storage account's primary blob endpoint
-      BLOB_ENDPOINT=$(az storage account show --name $STORAGE_ACCOUNT_NAME --query "primaryEndpoints.blob" --output tsv)
-      FULL_URL="${BLOB_ENDPOINT}runbooks/depolicify.ps1?${SAS_URL}"
+      FULL_URL="${STORAGE_ACCOUNT_ENDPOINT}runbooks/depolicify.ps1?${SAS_URL}"
+
+      echo -ne "\r\n\r\n"
+      echo -ne "Full URL: $FULL_URL \r\n"
+      echo -ne "\r\n"
       
-      echo "{\"runbookUrl\": \"$FULL_URL\"}"
-    '''
+      echo "{\"runbookUrl\": \"$FULL_URL\"}" > $AZ_SCRIPTS_OUTPUT_PATH
+    ''')
     environmentVariables: [
       {
         name: 'STORAGE_ACCOUNT_NAME'
         value: storageAccount.name
       }
       {
+        name: 'STORAGE_ACCOUNT_ENDPOINT'
+        value: storageAccount.properties.primaryEndpoints.blob
+      }
+      {
         name: 'STORAGE_ACCOUNT_KEY'
         secureValue: storageAccount.listKeys().keys[0].value
       }
       {
-        name: 'RUNBOOK_CONTENT'
-        value: runbookContent
+        name: 'EXPIRY'
+        value: expiry
       }
     ]
   }
@@ -158,7 +186,7 @@ resource schedule 'Microsoft.Automation/automationAccounts/schedules@2020-01-13-
     frequency: 'Day'
     interval: 1
     startTime: scheduleStartTime
-    timeZone: 'UTC'
+    timeZone: timeZone
   }
 }
 
