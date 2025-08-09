@@ -6,18 +6,14 @@ This Bicep project creates an Azure Automation Account with a PowerShell 7.2 run
 
 ### Deploy with default parameters
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Flgiuliani80%2Fdepolicify%2Fmain%2Fiac3%2Fmain.bicep)
-
-### Deploy via Azure Cloud Shell
-
-[![Deploy with Azure CLI](https://img.shields.io/badge/Deploy%20with-Azure%20CLI-blue?style=for-the-badge&logo=microsoft-azure)](https://shell.azure.com/)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Flgiuliani80%2Fdepolicify%2Fmain%2Fiac%2Fmain.bicep)
 
 **Command for Azure CLI:**
 
 ```bash
 az deployment group create \
   --resource-group "rg-TestBicepAutom" \
-  --template-uri "https://raw.githubusercontent.com/lgiuliani80/depolicify/main/iac3/main.bicep" \
+  --template-uri "https://raw.githubusercontent.com/lgiuliani80/depolicify/main/iac/main.bicep" \
   --parameters scheduleStartTime="$(date -u -d 'tomorrow 07:00' '+%Y-%m-%dT07:00:00.000Z')"
 ```
 
