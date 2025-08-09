@@ -1,37 +1,63 @@
 # Azure Automation Account - Depolicify
 
-Questo progetto Bicep crea un Azure Automation Account con un runbook PowerShell 7.2 chiamato "depolicify" che viene eseguito quotidianamente alle 07:00 AM UTC.
+This Bicep project creates an Azure Automation Account with a PowerShell 7.2 runbook called "depolicify" that runs daily at 07:00 AM.
 
-## Risorse create
+## Quick Deploy
 
-- **Azure Automation Account** (`aa-depolicify-itn`) - Account di automazione con managed identity
-- **Runbook PowerShell** (`depolicify`) - Script per rimuovere restrizioni da Storage Account e Key Vault
-- **Schedule** (`Daily-0700-Schedule`) - Programmazione giornaliera alle 07:00 AM UTC
-- **Job Schedule** - Collegamento tra runbook e schedule
-- **Automation Variable** (`TenantId`) - Variabile contenente il Tenant ID
+### Deploy with default parameters
 
-## Parametri
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Flgiuliani80%2Fdepolicify%2Fmain%2Fiac3%2Fmain.bicep)
 
-| Parametro | Descrizione | Valore di default | Obbligatorio |
-|-----------|-------------|-------------------|--------------|
-| `appname` | Nome dell'applicazione | `depolicify` | No |
-| `locationshort` | Abbreviazione della location | `itn` | No |
-| `location` | Regione Azure | `Italy North` | No |
-| `tenantId` | ID del tenant Azure AD | `tenant().tenantId` (corrente) | No |
-| `scheduleStartTime` | Data/ora di inizio schedule | - | **Sì** |
+### Deploy via Azure Cloud Shell
+
+[![Deploy with Azure CLI](https://img.shields.io/badge/Deploy%20with-Azure%20CLI-blue?style=for-the-badge&logo=microsoft-azure)](https://shell.azure.com/)
+
+**Command for Azure CLI:**
+
+```bash
+az deployment group create \
+  --resource-group "rg-TestBicepAutom" \
+  --template-uri "https://raw.githubusercontent.com/lgiuliani80/depolicify/main/iac3/main.bicep" \
+  --parameters scheduleStartTime="$(date -u -d 'tomorrow 07:00' '+%Y-%m-%dT07:00:00.000Z')"
+```
+
+> **Note:** The "Deploy to Azure" buttons work only if:
+>
+> 1. The repository is public on GitHub
+> 2. The Bicep template is accessible via HTTPS raw URL
+> 3. You have the necessary permissions in the target Azure subscription
+
+## Resources Created
+
+- **Azure Automation Account** (`aa-depolicify-itn`) - Automation account with managed identity
+- **PowerShell Runbook** (`depolicify`) - Script to remove restrictions from Storage Accounts and Key Vaults
+- **Schedule** (`Daily-0700-Schedule`) - Daily schedule at 07:00 AM UTC
+- **Job Schedule** - Link between runbook and schedule
+- **Automation Variable** (`TenantId`) - Variable containing the Tenant ID
+
+## Parameters
+
+| Parameter | Description | Default Value | Required |
+|-----------|-------------|---------------|----------|
+| `appname` | Application name | `depolicify` | No |
+| `locationshort` | Location abbreviation | `itn` | No |
+| `location` | Azure region | `Italy North` | No |
+| `tenantId` | Azure AD tenant ID | `tenant().tenantId` (current) | No |
+| `timeZone` | Schedule time zone | `Europe/Rome` | No |
 
 ## Naming Convention
 
-Tutte le risorse seguono la naming convention richiesta:
-- `<abbreviazione-risorsa>-<appname>-<locationshort>`
+All resources follow the required naming convention:
 
-Esempio: `aa-depolicify-itn` per l'Automation Account
+- `<resource-abbreviation>-<appname>-<locationshort>`
+
+Example: `aa-depolicify-itn` for the Automation Account
 
 ## Deployment
 
-### 1. Aggiornare i parametri
+### 1. Update parameters
 
-Modifica il file `main.parameters.json` inserendo i valori corretti:
+Edit the `main.parameters.json` file by entering the correct values:
 
 ```json
 {
@@ -41,93 +67,93 @@ Modifica il file `main.parameters.json` inserendo i valori corretti:
 }
 ```
 
-**Nota**: Il `tenantId` non è più richiesto nei parametri in quanto viene automaticamente rilevato dal resource group corrente.
+**Note**: The `tenantId` is no longer required in the parameters as it is automatically detected from the current resource group.
 
-### 2. Deploy con Azure CLI
+### 2. Deploy with Azure CLI
 
 ```bash
-# Login ad Azure
+# Login to Azure
 az login
 
-# Imposta la subscription corretta
+# Set the correct subscription
 az account set --subscription "your-subscription-id"
 
-# Crea il resource group (se non esiste)
+# Create the resource group (if it doesn't exist)
 az group create --name "rg-depolicify-itn" --location "Italy North"
 
-# Deploy del template
+# Deploy the template
 az deployment group create \
   --resource-group "rg-depolicify-itn" \
   --template-file "main.bicep" \
   --parameters "@main.parameters.json"
 ```
 
-### 3. Deploy con PowerShell
+### 3. Deploy with PowerShell
 
 ```powershell
-# Login ad Azure (tenantId rilevato automaticamente)
+# Login to Azure (tenantId detected automatically)
 Connect-AzAccount
 
-# Imposta la subscription corretta
+# Set the correct subscription
 Set-AzContext -SubscriptionId "your-subscription-id"
 
-# Crea il resource group (se non esiste)
+# Create the resource group (if it doesn't exist)
 New-AzResourceGroup -Name "rg-depolicify-itn" -Location "Italy North"
 
-# Deploy del template
+# Deploy the template
 New-AzResourceGroupDeployment `
   -ResourceGroupName "rg-depolicify-itn" `
   -TemplateFile "main.bicep" `
   -TemplateParameterFile "main.parameters.json"
 ```
 
-## Funzionalità del Runbook
+## Runbook Functionality
 
-Il runbook `depolicify` esegue le seguenti operazioni:
+The `depolicify` runbook performs the following operations:
 
-1. **Autentica** usando il managed identity dell'Automation Account
-2. **Itera** su tutte le subscription del tenant
-3. **Storage Account**: Abilita l'accesso con shared key e l'accesso dalla rete pubblica
-4. **Key Vault**: Abilita l'accesso dalla rete pubblica
+1. **Authenticates** using the Automation Account's managed identity
+2. **Iterates** through all subscriptions in the tenant
+3. **Storage Accounts**: Enables shared key access and public network access
+4. **Key Vaults**: Enables public network access
 
-## Permessi necessari
+## Required Permissions
 
-Il managed identity dell'Automation Account deve avere i seguenti permessi:
+The Automation Account's managed identity must have the following permissions:
 
-- **Storage Account**: `Storage Account Contributor` o `Owner`
-- **Key Vault**: `Key Vault Contributor` o `Owner`
-- **Subscription**: `Reader` per enumerare le risorse
+- **Storage Accounts**: `Storage Account Contributor` or `Owner`
+- **Key Vaults**: `Key Vault Contributor` or `Owner`
+- **Subscriptions**: `Reader` to enumerate resources
 
-### Assegnazione permessi via PowerShell
+### Assign permissions via PowerShell
 
 ```powershell
-# Ottieni il principal ID del managed identity
+# Get the managed identity principal ID
 $automationAccount = Get-AzAutomationAccount -ResourceGroupName "rg-depolicify-itn" -Name "aa-depolicify-itn"
 $principalId = $automationAccount.Identity.PrincipalId
 
-# Assegna il ruolo Contributor a livello di subscription
+# Assign the Contributor role at subscription level
 New-AzRoleAssignment -ObjectId $principalId -RoleDefinitionName "Contributor" -Scope "/subscriptions/your-subscription-id"
 ```
 
 ## Schedule
 
-- **Frequenza**: Giornaliera
-- **Orario**: 07:00 AM UTC
-- **Fuso orario**: UTC
+- **Frequency**: Daily
+- **Time**: 07:00 AM
 
-## Output
+## Outputs
 
-Il template restituisce i seguenti output:
+The template returns the following outputs:
 
-- `automationAccountName`: Nome dell'Automation Account
-- `automationAccountId`: ID risorsa dell'Automation Account  
-- `runbookName`: Nome del runbook
-- `scheduleName`: Nome della schedule
-- `principalId`: Principal ID del managed identity
+- `automationAccountName`: Automation Account name
+- `automationAccountId`: Automation Account resource ID
+- `runbookName`: Runbook name
+- `scheduleName`: Schedule name
+- `principalId`: Managed identity principal ID
 
 ## Troubleshooting
 
-### Verificare lo stato del runbook
+### Check runbook status
+
 ```bash
 az automation runbook show \
   --resource-group "rg-depolicify-itn" \
@@ -135,7 +161,8 @@ az automation runbook show \
   --name "depolicify"
 ```
 
-### Verificare la schedule
+### Check schedule
+
 ```bash
 az automation schedule show \
   --resource-group "rg-depolicify-itn" \
@@ -143,6 +170,7 @@ az automation schedule show \
   --name "Daily-0700-Schedule"
 ```
 
-### Log di esecuzione
-I log di esecuzione sono disponibili nel portale Azure sotto:
+### Execution logs
+
+Execution logs are available in the Azure portal under:
 `Automation Account > Jobs > [Job ID] > Output`
