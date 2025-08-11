@@ -135,11 +135,14 @@ if [[ $? -eq 0 ]]; then
     echo -e "${YELLOW}📝 Command to assign permissions:${NC}"
     cat > assign_permissions.sh << EOF
 #!/bin/bash
-echo "🔐 Assigning permissions to managed identity..."
-az role assignment create --assignee "$PRINCIPAL_ID" --role "Contributor" --scope "/subscriptions/$SUBSCRIPTION_ID"
+EOF
+    for S in $(az account list --query "[?tenantId=='$TENANT_ID'].id" --output tsv); do
+        cat >> assign_permissions.sh << EOF
+echo "🔐 Assigning permissions to managed identity on subscription $S..."
+az role assignment create --assignee "$PRINCIPAL_ID" --role "Contributor" --scope "/subscriptions/$S"
 echo "✅ Permissions assigned!"
 EOF
-    chmod +x assign_permissions.sh
+    done
     echo -e "   ${WHITE}Created script: assign_permissions.sh${NC}"
     
 else
