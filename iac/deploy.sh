@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 
 # Default parameters
 RESOURCE_GROUP_NAME="rg-depolicify-itn"
-LOCATION="Italy North"
+LOCATION="italynorth"
 APP_NAME="depolicify"
 LOCATION_SHORT="itn"
 
@@ -27,14 +27,10 @@ show_help() {
     echo ""
     echo "Optional parameters:"
     echo "  -g, --resource-group RG_NAME        Resource Group name (default: rg-depolicify-itn)"
-    echo "  -l, --location LOCATION             Azure region (default: Italy North)"
+    echo "  -l, --location LOCATION             Azure region (default: italynorth)"
     echo "  -a, --app-name APP_NAME             Application name (default: depolicify)"
     echo "  -c, --location-short LOCATION_SHORT Location abbreviation (default: itn)"
     echo "  -h, --help                          Show this help message"
-    echo ""
-    echo "Example:"
-    echo "  $0 -s 87654321-4321-4321-4321-210987654321"
-    echo "  $0 -t 12345678-1234-1234-1234-123456789012 -s 87654321-4321-4321-4321-210987654321"
     echo ""
 }
 
@@ -70,6 +66,21 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo -e "${GREEN}🚀 Starting Azure Automation Account deployment for Depolicify...${NC}"
+
+echo -e "${YELLOW}📁 Checking 'az' command existence...${NC}"
+if ! command -v az &> /dev/null; then
+    echo -e "${RED}❌ 'az' command not found. Please install Azure CLI.${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ 'az' command found.${NC}"
+
+
+echo -e "${YELLOW}📁 Checking 'jq' command existence...${NC}"
+if ! command -v jq &> /dev/null; then
+    echo -e "${RED}❌ 'jq' command not found. Please install jq.${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ 'jq' command found.${NC}"
 
 # Create Resource Group if it doesn't exist
 echo -e "${YELLOW}📁 Checking/Creating Resource Group: $RESOURCE_GROUP_NAME${NC}"
@@ -132,19 +143,30 @@ if [[ $? -eq 0 ]]; then
     echo -e "   ${CYAN}• Azure Portal: https://portal.azure.com/#@$TENANT_ID/resource/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Automation/automationAccounts/$AUTOMATION_ACCOUNT_NAME${NC}"
     
     # Script for role assignment
-    echo -e "${YELLOW}📝 Command to assign permissions:${NC}"
+    echo -e "${YELLOW}📝 Creating script to assign permissions ...${NC}"
     cat > assign_permissions.sh << EOF
 #!/bin/bash
 EOF
     for S in $(az account list --query "[?tenantId=='$TENANT_ID'].id" --output tsv); do
         cat >> assign_permissions.sh << EOF
 echo "🔐 Assigning permissions to managed identity on subscription $S..."
-az role assignment create --assignee "$PRINCIPAL_ID" --role "Contributor" --scope "/subscriptions/$S"
-echo "✅ Permissions assigned!"
+EXISTING=\$(az role assignment list --assignee-object-id "$PRINCIPAL_ID" --include-inherited --role "Contributor" --scope "subscriptions/$S" | jq length)
+if [ \$EXISTING gt 0 ]
+then
+    echo "✅ Assignment already existing!"
+else
+    if az role assignment create --assignee-object-id "$PRINCIPAL_ID" --assignee-principal-type ServicePrincipal --role "Contributor" --scope "subscriptions/$S"
+    then
+        echo "✅ Permissions assigned!"
+    else
+        echo -e "${RED}❌ Role assignment failed!${NC}"
+    fi
+fi
 EOF
     done
-    echo -e "   ${WHITE}Created script: assign_permissions.sh${NC}"
-    
+    chmod +x assign_permissions.sh
+    echo -e "   ${WHITE}Created script: assign_permissions.sh. **${YELLOW}Run this script to assign permissions${WHITE}**.${NC}"
+
 else
     echo -e "${RED}❌ Deployment failed!${NC}"
     exit 1

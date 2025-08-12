@@ -8,6 +8,8 @@ This Bicep project creates an Azure Automation Account with a PowerShell 7.2 run
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Flgiuliani80%2Fdepolicify%2Fmain%2Fiac%2Fmain.bicep)
 
+> *NOTE*: This deploy does NOT automatically gives the System Assigned Managed Identity of the Azure Automation Account a "Contributor" role on the Subscription: this is a manual step you need to perform after deployment.
+
 **Command for Azure CLI:**
 
 ```bash
@@ -63,8 +65,6 @@ Edit the `main.parameters.json` file by entering the correct values:
 }
 ```
 
-**Note**: The `tenantId` is no longer required in the parameters as it is automatically detected from the current resource group.
-
 ### 2. Deploy with Azure CLI
 
 ```bash
@@ -103,7 +103,7 @@ New-AzResourceGroupDeployment `
   -TemplateParameterFile "main.parameters.json"
 ```
 
-## Runbook Functionality
+## Runbook FunctionalityS
 
 The `depolicify` runbook performs the following operations:
 
