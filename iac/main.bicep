@@ -11,7 +11,7 @@ param location string = 'Italy North'
 param tenantId string = tenant().tenantId
 
 @description('Start time for the schedule (UTC)')
-param scheduleStartTime string = dateTimeAdd(utcNow(), 'P1D')
+param scheduleStartTime string = dateTimeAdd(utcNow(), 'P1H')
 
 @description('Local time zone')
 param timeZone string = 'Europe/Rome'
@@ -23,7 +23,7 @@ param expiry string = dateTimeAdd(utcNow(), 'PT1H')
 var automationAccountName = 'aa-${appname}-${locationshort}'
 var storageAccountName = 'st${appname}${locationshort}${substring(uniqueString(resourceGroup().id), 0, 5)}'
 var runbookName = 'depolicify'
-var scheduleName = 'Daily-0700-Schedule'
+var scheduleName = 'Hourly-Schedule'
 var jobScheduleName = guid(resourceGroup().id, automationAccountName, runbookName, scheduleName)
 var variableName = 'TenantId'
 var deploymentScriptName = 'upload-runbook-script'
@@ -177,13 +177,13 @@ resource runbook 'Microsoft.Automation/automationAccounts/runbooks@2018-06-30' =
   ]
 }
 
-// Schedule for daily execution at 07:00 AM
+// Schedule for hourly execution
 resource schedule 'Microsoft.Automation/automationAccounts/schedules@2020-01-13-preview' = {
   parent: automationAccount
   name: scheduleName
   properties: {
-    description: 'Daily schedule to run depolicify at 07:00 AM'
-    frequency: 'Day'
+    description: 'Hourly schedule'
+    frequency: 'Hour'
     interval: 1
     startTime: scheduleStartTime
     timeZone: timeZone

@@ -126,8 +126,7 @@ New-AzRoleAssignment -ObjectId $principalId -RoleDefinitionName "Contributor" -S
 
 ## Schedule
 
-- **Frequency**: Daily
-- **Time**: 07:00 AM
+- **Frequency**: Hourly
 
 ## Outputs
 
@@ -156,7 +155,7 @@ az automation runbook show \
 az automation schedule show \
   --resource-group "rg-depolicify-itn" \
   --automation-account-name "aa-depolicify-itn" \
-  --name "Daily-0700-Schedule"
+  --name "Hourly-Schedule"
 ```
 
 ### Execution logs
