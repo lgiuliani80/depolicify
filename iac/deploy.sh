@@ -151,7 +151,7 @@ EOF
         cat >> assign_permissions.sh << EOF
 echo "🔐 Assigning permissions to managed identity on subscription $S..."
 EXISTING=\$(az role assignment list --assignee-object-id "$PRINCIPAL_ID" --include-inherited --role "Contributor" --scope "subscriptions/$S" | jq length)
-if [ \$EXISTING gt 0 ]
+if [ \$EXISTING -gt 0 ]
 then
     echo "✅ Assignment already existing!"
 else
