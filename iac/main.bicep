@@ -11,7 +11,7 @@ param location string = 'Italy North'
 param tenantId string = tenant().tenantId
 
 @description('Start time for the schedule (UTC)')
-param scheduleStartTime string = dateTimeAdd(utcNow(), 'P1H')
+param scheduleStartTime string = dateTimeAdd(utcNow(), 'PT1H')
 
 @description('Local time zone')
 param timeZone string = 'Europe/Rome'

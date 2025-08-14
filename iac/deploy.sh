@@ -103,16 +103,11 @@ echo -e "${YELLOW}🚀 Starting Bicep template deployment...${NC}"
 # Build parameters dynamically
 PARAMS="appname=$APP_NAME locationshort=$LOCATION_SHORT location=$LOCATION"
 
-# Add tenantId only if specified
-if [[ -n "$TENANT_ID" ]]; then
-    PARAMS="$PARAMS tenantId=$TENANT_ID"
-fi
-
 DEPLOYMENT_RESULT=$(az deployment group create \
     --resource-group "$RESOURCE_GROUP_NAME" \
     --template-file "main.bicep" \
     --parameters $PARAMS \
-    --output json)
+    --output json --debug)
 
 if [[ $? -eq 0 ]]; then
     echo -e "${GREEN}✅ Deployment completed successfully!${NC}"
