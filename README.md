@@ -1,6 +1,6 @@
 # Azure Automation Account - Depolicify
 
-This Bicep project creates an Azure Automation Account with a PowerShell 7.2 runbook called "depolicify" that runs daily at 07:00 AM.
+This Bicep project creates an Azure Automation Account with a PowerShell 7.2 runbook called "depolicify" that runs hourly.
 
 ## Quick Deploy
 
@@ -30,7 +30,7 @@ cd iac
 
 - **Azure Automation Account** (`aa-depolicify-itn`) - Automation account with managed identity
 - **PowerShell Runbook** (`depolicify`) - Script to remove restrictions from Storage Accounts and Key Vaults
-- **Schedule** (`Daily-0700-Schedule`) - Daily schedule at 07:00 AM UTC
+- **Schedule** (`Hourly-Schedule`) - Hourly schedule
 - **Job Schedule** - Link between runbook and schedule
 - **Automation Variable** (`TenantId`) - Variable containing the Tenant ID
 
