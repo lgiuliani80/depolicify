@@ -4,26 +4,27 @@ This Bicep project creates an Azure Automation Account with a PowerShell 7.2 run
 
 ## Quick Deploy
 
+### Deploy via scripts [preferred]
+
+#### Bash
+
+```bash
+cd iac
+./deploy.sh -a "depolicify"
+```
+
+#### PowerShell
+
+```powershell
+cd iac
+.\deploy.ps1 -AppName "depolicify"
+```
+
 ### Deploy with default parameters
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Flgiuliani80%2Fdepolicify%2Fmain%2Fiac%2Fmain.bicep)
 
 > *NOTE*: This deploy does NOT automatically gives the System Assigned Managed Identity of the Azure Automation Account a "Contributor" role on the Subscription: this is a manual step you need to perform after deployment.
-
-**Command for Azure CLI:**
-
-```bash
-az deployment group create \
-  --resource-group "rg-TestBicepAutom" \
-  --template-uri "https://raw.githubusercontent.com/lgiuliani80/depolicify/main/iac/main.bicep" \
-  --parameters scheduleStartTime="$(date -u -d 'tomorrow 07:00' '+%Y-%m-%dT07:00:00.000Z')"
-```
-
-> **Note:** The "Deploy to Azure" buttons work only if:
->
-> 1. The repository is public on GitHub
-> 2. The Bicep template is accessible via HTTPS raw URL
-> 3. You have the necessary permissions in the target Azure subscription
 
 ## Resources Created
 
@@ -51,19 +52,11 @@ All resources follow the required naming convention:
 
 Example: `aa-depolicify-itn` for the Automation Account
 
-## Deployment
+## Manual Deployment
 
 ### 1. Update parameters
 
-Edit the `main.parameters.json` file by entering the correct values:
-
-```json
-{
-  "scheduleStartTime": {
-    "value": "2025-08-10T07:00:00.000Z"
-  }
-}
-```
+Edit the `main.parameters.json` file by entering the correct values.
 
 ### 2. Deploy with Azure CLI
 
@@ -103,7 +96,7 @@ New-AzResourceGroupDeployment `
   -TemplateParameterFile "main.parameters.json"
 ```
 
-## Runbook FunctionalityS
+## Runbook Functionalities
 
 The `depolicify` runbook performs the following operations:
 
