@@ -18,6 +18,7 @@ RESOURCE_GROUP_NAME="rg-depolicify-itn"
 LOCATION="italynorth"
 APP_NAME="depolicify"
 LOCATION_SHORT="itn"
+SCHEDULE_PERIOD_HOURS=6
 
 # Help function
 show_help() {
@@ -30,6 +31,7 @@ show_help() {
     echo "  -l, --location LOCATION             Azure region (default: italynorth)"
     echo "  -a, --app-name APP_NAME             Application name (default: depolicify)"
     echo "  -c, --location-short LOCATION_SHORT Location abbreviation (default: itn)"
+    echo "  -p, --schedule-period-hours HOURS    Schedule period in hours (default: 6)"
     echo "  -h, --help                          Show this help message"
     echo ""
 }
@@ -51,6 +53,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -c|--location-short)
             LOCATION_SHORT="$2"
+            shift 2
+            ;;
+        -p|--schedule-period-hours)
+            SCHEDULE_PERIOD_HOURS="$2"
             shift 2
             ;;
         -h|--help)
@@ -101,7 +107,7 @@ echo -e "  ${WHITE}• Location Short:   $LOCATION_SHORT${NC}"
 echo -e "${YELLOW}🚀 Starting Bicep template deployment...${NC}"
 
 # Build parameters dynamically
-PARAMS="appname=$APP_NAME locationshort=$LOCATION_SHORT location=$LOCATION"
+PARAMS="appname=$APP_NAME locationshort=$LOCATION_SHORT location=$LOCATION schedulePeriodHours=$SCHEDULE_PERIOD_HOURS"
 
 DEPLOYMENT_RESULT=$(az deployment group create \
     --resource-group "$RESOURCE_GROUP_NAME" \

@@ -43,6 +43,7 @@ cd iac
 | `location` | Azure region | `Italy North` | No |
 | `tenantId` | Azure AD tenant ID | `tenant().tenantId` (current) | No |
 | `timeZone` | Schedule time zone | `Europe/Rome` | No |
+| `schedulePeriodHours` | Schedule frequency in hours | `6` | No |
 
 ## Naming Convention
 
@@ -126,7 +127,8 @@ New-AzRoleAssignment -ObjectId $principalId -RoleDefinitionName "Contributor" -S
 
 ## Schedule
 
-- **Frequency**: Hourly
+- **Frequency**: Every N hours (default: 6)
+- **Time Zone**: default: Europe/Rome
 
 ## Outputs
 

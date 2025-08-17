@@ -13,6 +13,9 @@
     },
     "timeZone": {
       "value": "Europe/Rome"
+    },
+    "schedulePeriodHours": {
+      "value": 6
     }
   }
 }

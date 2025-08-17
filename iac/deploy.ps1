@@ -13,8 +13,10 @@ param(
     [string]$LocationShort = "itn",
 
     [Parameter(Mandatory=$false)]
-    [string]$AppName = "depolicify"
-    
+    [string]$AppName = "depolicify",
+
+    [Parameter(Mandatory=$false)]
+    [int]$SchedulePeriodHours = 6
 )
 
 $ErrorActionPreference = "Stop"
@@ -47,6 +49,7 @@ $parameters = @{
     appname = $AppName
     locationshort = $LocationShort
     location = $Location
+    schedulePeriodHours = $SchedulePeriodHours
 }
 
 Write-Host "Deployment parameters:" -ForegroundColor Yellow

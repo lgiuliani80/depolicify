@@ -13,6 +13,9 @@ param tenantId string = tenant().tenantId
 @description('Start time for the schedule (UTC)')
 param scheduleStartTime string = dateTimeAdd(utcNow(), 'PT1H')
 
+@description('Schedule period in hours')
+param schedulePeriodHours int = 6
+
 @description('Local time zone')
 param timeZone string = 'Europe/Rome'
 
@@ -184,7 +187,7 @@ resource schedule 'Microsoft.Automation/automationAccounts/schedules@2020-01-13-
   properties: {
     description: 'Hourly schedule'
     frequency: 'Hour'
-    interval: 1
+    interval: schedulePeriodHours
     startTime: scheduleStartTime
     timeZone: timeZone
   }
